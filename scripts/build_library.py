@@ -27,7 +27,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "helper"))
 
-from dt_ai_helper.rag import ModuleDoc, parse_module_file  # noqa: E402
+from dt_ai_helper.rag import ModuleDoc, parse_module_file
 
 # ---------------------------------------------------------------------------
 # Known ops. Source of truth: the .c/.cc files in darktable-org/darktable
@@ -36,31 +36,12 @@ from dt_ai_helper.rag import ModuleDoc, parse_module_file  # noqa: E402
 # deliberately excluded -- the corpus does not document them.
 # ---------------------------------------------------------------------------
 KNOWN_OPS = frozenset(
-    """
-    agx ashift atrous basecurve basicadj bilat bilateral bloom blurs borders
-    cacorrect cacorrectrgb censorize channelmixer channelmixerrgb clahe clipping
-    colisa colorbalance colorbalancergb colorchecker colorcontrast colorcorrection
-    colorequal colorharmonizer colorin colorize colormapping colorout
-    colorreconstruction colortransfer colorzones contrastntexture crop defringe
-    demosaic denoiseprofile diffuse dither enlargecanvas equalizer exposure filmic
-    filmicrgb flip globaltonemap graduatednd grain hazeremoval highlights highpass
-    hotpixels invert lens levels liquify lowlight lowpass lut3d monochrome
-    negadoctor nlmeans overlay primaries profile_gamma rasterfile rawdenoise
-    rawprepare relight retouch rgbcurve rgblevels rotatepixels scalepixels shadhi
-    sharpen sigmoid soften splittoning spots temperature tonecurve toneequal
-    tonemap velvia vibrance vignette watermark zonesystem
-    """.split()
+    ["agx", "ashift", "atrous", "basecurve", "basicadj", "bilat", "bilateral", "bloom", "blurs", "borders", "cacorrect", "cacorrectrgb", "censorize", "channelmixer", "channelmixerrgb", "clahe", "clipping", "colisa", "colorbalance", "colorbalancergb", "colorchecker", "colorcontrast", "colorcorrection", "colorequal", "colorharmonizer", "colorin", "colorize", "colormapping", "colorout", "colorreconstruction", "colortransfer", "colorzones", "contrastntexture", "crop", "defringe", "demosaic", "denoiseprofile", "diffuse", "dither", "enlargecanvas", "equalizer", "exposure", "filmic", "filmicrgb", "flip", "globaltonemap", "graduatednd", "grain", "hazeremoval", "highlights", "highpass", "hotpixels", "invert", "lens", "levels", "liquify", "lowlight", "lowpass", "lut3d", "monochrome", "negadoctor", "nlmeans", "overlay", "primaries", "profile_gamma", "rasterfile", "rawdenoise", "rawprepare", "relight", "retouch", "rgbcurve", "rgblevels", "rotatepixels", "scalepixels", "shadhi", "sharpen", "sigmoid", "soften", "splittoning", "spots", "temperature", "tonecurve", "toneequal", "tonemap", "velvia", "vibrance", "vignette", "watermark", "zonesystem"]
 )
 
 # Plan section 7.3 curated priority lists.
-TIER1_OPS = (
-    "exposure filmicrgb sigmoid colorbalancergb toneequal highlights temperature "
-    "sharpen diffuse denoiseprofile crop clipping"
-).split()
-TIER2_OPS = (
-    "channelmixerrgb colorzones bilat lens ashift vignette graduatednd velvia "
-    "lowpass retouch"
-).split()
+TIER1_OPS = ["exposure", "filmicrgb", "sigmoid", "colorbalancergb", "toneequal", "highlights", "temperature", "sharpen", "diffuse", "denoiseprofile", "crop", "clipping"]
+TIER2_OPS = ["channelmixerrgb", "colorzones", "bilat", "lens", "ashift", "vignette", "graduatednd", "velvia", "lowpass", "retouch"]
 
 REQUIRED_SECTIONS = ("group", "synonyms", "purpose", "use_when")
 FULL_SECTIONS = ("key_controls", "visual_effect", "pitfalls", "pairs_with")
