@@ -33,3 +33,6 @@ Wave 3: W8.
 ## PR / review log
 
 (appended as PRs land)
+
+### 2026-08-31 — PR #1 (W1, feat/helper-skeleton) MERGED
+Verified independently: 10 tests pass, ruff clean. Notes: jobs.py docstring mentions nonexistent `pipelines` module (cleanup for W5); helper's default runtime file is `<platform-cache>/dt-ai-helper/runtime.json` — Lua launcher should pass `--runtime-file` explicitly to avoid path-guessing drift (reconcile with W2's 003-runtime-file-location.md when it lands).
