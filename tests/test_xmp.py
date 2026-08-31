@@ -18,7 +18,6 @@ from typing import Any
 
 import pytest
 import yaml
-
 from dt_ai_helper import xmp
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"

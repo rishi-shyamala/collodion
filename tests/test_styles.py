@@ -15,11 +15,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
-
 from dt_ai_helper import styles, xmp
 from dt_ai_helper.main import create_app
 from dt_ai_helper.params_codec import decode_params, supported_versions
+from fastapi.testclient import TestClient
 
 TOKEN = "test-token-123"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
