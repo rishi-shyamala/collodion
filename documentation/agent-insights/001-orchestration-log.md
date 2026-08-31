@@ -42,3 +42,6 @@ lua/dt-ai-assistant.lua (~1360 lines): luac-clean, mock-driven callback tests, r
 
 ### 2026-08-31 — PR #3 (W4, feat/xmp-codecs) MERGED
 XMP parser + Tier 1 codecs (10 ops, current modversions), dbfallback, synthetic fixtures. Verified: 55 tests pass, ruff clean; exposure codec spot-checked against dt 4.6 source (gboolean handled as int32). Orchestrator resolved agent-insights README index merge conflict. Outstanding manual task: validate against real darktable-produced XMPs (insights 005).
+
+### 2026-08-31 — PR #4 (W3, feat/rag) MERGED
+89-module corpus (50 full/39 stub, ~24k words), BM25 + synonyms + deprecated-penalty retriever, validator. 119 tests green. Orchestrator renumbered corpus notes to 008 and fixed scripts/ lint. Packaging gap (corpus outside wheel — needs package-data or move into dt_ai_helper/data) assigned to W8.
