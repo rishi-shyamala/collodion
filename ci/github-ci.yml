@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        working-directory: helper
+        run: pip install -e ".[dev]"
+      - name: Lint
+        working-directory: helper
+        run: ruff check .
+      - name: Test
+        working-directory: helper
+        run: pytest ../tests -q
+
+  lua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install luacheck
+        run: sudo apt-get update && sudo apt-get install -y lua-check
+      - name: Lint Lua
+        run: |
+          if ls lua/*.lua >/dev/null 2>&1; then
+            luacheck lua --globals darktable dt --no-max-line-length
+          else
+            echo "no lua files yet"
+          fi

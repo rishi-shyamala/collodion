@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+.coverage
+htmlcov/
+*.log
+.DS_Store
+# runtime artifacts of the helper
+*.token
+dt-ai-helper.json
