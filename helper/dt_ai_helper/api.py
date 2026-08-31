@@ -21,12 +21,14 @@ models, and job plumbing should not need to change. Likewise `/optimize`,
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from dt_ai_helper import __version__
+from dt_ai_helper import styles as styles_module
 
 router = APIRouter()
 
@@ -160,3 +162,56 @@ async def get_job(job_id: str, request: Request) -> dict[str, Any]:
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return job.to_public_dict()
+
+
+# ---------------------------------------------------------------------------
+# /style
+# ---------------------------------------------------------------------------
+#
+# Deviation from the literal plan §5.2 contract (`{recommendation_id} ->
+# {file}`): per this feature's task spec, the request carries the
+# structured recommendation (plan §5.5's `{"recommendations": [...]}`)
+# directly rather than a ``recommendation_id`` referencing a prior job's
+# stored output, and the response is the richer
+# `{file, included_ops, skipped_ops, manual_steps}` shape rather than bare
+# `{file}` - this needs no job/history-store plumbing on either side and
+# still fits the same seam other workers' job handlers use. Noted here and
+# in the PR description; flag if a stored-recommendation flow turns out to
+# be needed later.
+
+
+class StyleRequest(BaseModel):
+    recommendation: dict[str, Any]
+    name: str | None = None
+
+
+def _manual_step(entry: dict[str, Any]) -> str:
+    module = entry.get("module") or entry.get("op") or "?"
+    control = entry.get("control")
+    reason = entry.get("reason", "not included")
+    if control:
+        return f"{module}: could not set '{control}' automatically ({reason}) - set it manually."
+    return f"{module}: not included in the style ({reason}) - apply manually if desired."
+
+
+@router.post("/style")
+async def create_style(body: StyleRequest, request: Request) -> dict[str, Any]:
+    name = body.name or f"ai-assistant/style-{int(time.time())}"
+
+    modules, translate_skipped = styles_module.translate_recommendation(body.recommendation)
+    result = styles_module.build_style(name, modules)
+
+    skipped_ops = [
+        {"module": s["op"], "control": None, "reason": s["reason"]}
+        for s in result["skipped_ops"]
+    ] + translate_skipped
+
+    style_dir: Path | None = getattr(request.app.state, "style_dir", None)
+    path = styles_module.write_style_file(result["xml"], name, style_dir)
+
+    return {
+        "file": str(path),
+        "included_ops": result["included_ops"],
+        "skipped_ops": skipped_ops,
+        "manual_steps": [_manual_step(s) for s in skipped_ops],
+    }
