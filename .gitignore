@@ -14,3 +14,4 @@ htmlcov/
 # runtime artifacts of the helper
 *.token
 dt-ai-helper.json
+.claude/
