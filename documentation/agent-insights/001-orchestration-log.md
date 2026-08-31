@@ -48,3 +48,6 @@ XMP parser + Tier 1 codecs (10 ops, current modversions), dbfallback, synthetic 
 
 ### 2026-08-31 — PR #5 (W7, feat/styles) MERGED
 .dtstyle emitter (shape + 420-byte blendop defaults verified against darktable source), recommendation translator, POST /style (inline recommendation — accepted deviation). 137 tests green. Integration note for W6: optimize job handler should call styles internally and return style.file in the job result (Lua's Apply-style expects it there). denoiseprofile/crop excluded from styles (no static defaults / no slider mapping).
+
+### 2026-08-31 — PR #6 (W5b, feat/llm-chat) MERGED
+Real chat pipeline: OpenAIChatClient (retries, strict_json, vision privacy guard), prompts, context.py enrichment, per-history_id server-side history. Salvaged interrupted W5's WIP; W5b merged main, resolved api.py /style conflict, fixed pytest-asyncio rootdir gotcha (insights 009). 153 tests green.
