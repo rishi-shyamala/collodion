@@ -13,3 +13,5 @@ Rules:
 
 - `001-orchestration-log.md` — task breakdown, subagent assignments, PR/review log
 - `002-conventions-for-subagents.md` — how work is scoped, branch/PR rules, file-ownership map
+- `003-runtime-file-location.md` — Lua↔helper runtime file path/contents contract (cross-checked between W1 and W2)
+- `004-xmp-freshness-check-split.md` — why the sidecar mtime-vs-change_timestamp freshness decision is delegated to the helper instead of computed in Lua
