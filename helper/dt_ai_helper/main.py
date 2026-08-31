@@ -36,7 +36,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from dt_ai_helper.api import ConfigStore, router, run_chat_job
+from dt_ai_helper.api import ChatHistoryStore, ConfigStore, router, run_chat_job
 from dt_ai_helper.jobs import JobManager
 
 DEFAULT_HEARTBEAT_TIMEOUT = 600.0  # 10 minutes, per plan §3/§5.2
@@ -163,8 +163,17 @@ def create_app(
 
     app = FastAPI(title="dt-ai-helper", lifespan=_lifespan)
     app.state.config_store = ConfigStore()
+    app.state.chat_histories = ChatHistoryStore()
     app.state.job_manager = JobManager()
-    app.state.job_manager.register_handler("chat", run_chat_job)
+
+    # run_chat_job (api.py) needs app.state.config_store/chat_histories, but
+    # JobManager handlers only receive a job's payload -- so register a
+    # closure that supplies the owning app rather than changing JobManager's
+    # contract for every job kind.
+    async def _run_chat_job(payload: dict[str, Any]) -> dict[str, Any]:
+        return await run_chat_job(payload, app)
+
+    app.state.job_manager.register_handler("chat", _run_chat_job)
     app.state.heartbeat_timeout = heartbeat_timeout
     app.state.last_heartbeat = time.time()
     app.state.token = token

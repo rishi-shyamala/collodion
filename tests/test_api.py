@@ -9,9 +9,8 @@ from __future__ import annotations
 import time
 
 import pytest
-from fastapi.testclient import TestClient
-
 from dt_ai_helper.main import create_app
+from fastapi.testclient import TestClient
 
 TOKEN = "test-token-123"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
@@ -78,7 +77,11 @@ def test_config_requires_auth(client: TestClient):
     assert resp.status_code == 401
 
 
-def test_chat_poll_done_echo_roundtrip(client: TestClient):
+def test_chat_poll_without_preset_returns_helpful_error(client: TestClient):
+    """``run_chat_job`` now runs the real LLM pipeline (see test_llm.py for
+    the full offline end-to-end coverage against a mock LLM server); with no
+    model preset configured, the job should surface a helpful error rather
+    than the old canned echo reply."""
     resp = client.post("/chat", json={"message": "hello there"}, headers=AUTH)
     assert resp.status_code == 200
     job_id = resp.json()["job_id"]
@@ -95,8 +98,8 @@ def test_chat_poll_done_echo_roundtrip(client: TestClient):
         time.sleep(0.05)
 
     assert body is not None
-    assert body["status"] == "done"
-    assert body["answer"] == "Echo: hello there"
+    assert body["status"] == "error"
+    assert "preset" in body["error"].lower()
 
 
 def test_job_not_found(client: TestClient):

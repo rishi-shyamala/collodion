@@ -8,14 +8,24 @@ new parameters through a factory function.
 Seam for other workers
 -----------------------
 ``/chat`` enqueues a job of kind ``"chat"`` whose handler is
-``run_chat_job`` below. Today that handler is a canned echo. Worker W5 (LLM
-chat) is expected to replace the *body* of ``run_chat_job`` with a call into
-``llm.py`` / ``prompts.py`` / RAG retrieval — the route, request/response
-models, and job plumbing should not need to change. Likewise `/optimize`,
-`/vision`, and `/style` (owned by other workers) can be added to this same
-``router`` following the `/chat` pattern: validate a pydantic body, call
-``request.app.state.job_manager.submit(<kind>, payload)``, return
-``{"job_id": job_id}``.
+``run_chat_job`` below. It now runs the real pipeline: RAG retrieval,
+``image_context`` enrichment, server-side per-``history_id`` chat history,
+and an ``llm.OpenAIChatClient`` call built from the active
+``ConfigStore`` preset. Because job handlers only receive ``payload`` (see
+``jobs.JobManager``), ``run_chat_job`` additionally takes the owning
+``FastAPI`` app so it can reach ``app.state.config_store`` /
+``app.state.chat_histories`` -- ``main.create_app`` registers it via a small
+closure that supplies ``app`` (see the comment there). Likewise
+``/optimize``, ``/vision``, and ``/style`` (owned by other workers) can be
+added to this same ``router`` following the ``/chat`` pattern: validate a
+pydantic body, call ``request.app.state.job_manager.submit(<kind>,
+payload)``, return ``{"job_id": job_id}``.
+
+History clearing: ``POST /history/clear`` with ``{"history_id": ...}`` wipes
+one per-image history server-side (rather than a ``clear`` flag on
+``ChatRequest``) so Lua's "Clear" button can fire it independently of
+sending a message; document this alongside plan §5.2 if the contract there
+is amended.
 """
 
 from __future__ import annotations
@@ -27,10 +37,28 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from dt_ai_helper import __version__
+from dt_ai_helper import __version__, context, prompts, rag
 from dt_ai_helper import styles as styles_module
+from dt_ai_helper.llm import LLMError, OpenAIChatClient
 
 router = APIRouter()
+
+#: Default LLM sampling parameters for chat turns. Not yet user-configurable
+#: (no field for it in plan §5.2's /config body) -- revisit if a worker adds
+#: per-preset generation settings.
+CHAT_TEMPERATURE = 0.4
+CHAT_MAX_TOKENS = 900
+
+#: Number of RAG module-library files injected per chat turn (plan §5.5).
+CHAT_RAG_TOP_K = 4
+
+#: history_id fallback when Lua omits one (defensive; Lua is expected to key
+#: this per-image per plan §5.3).
+DEFAULT_HISTORY_ID = "default"
+
+#: Chat history is trimmed to roughly this many characters (summed across
+#: stored turns) before being sent back to the model, per plan §5.3.
+DEFAULT_HISTORY_CHAR_BUDGET = 8000
 
 
 # ---------------------------------------------------------------------------
@@ -125,7 +153,7 @@ async def heartbeat(request: Request) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# /chat + /jobs/{id}
+# /chat + /jobs/{id} + /history/clear
 # ---------------------------------------------------------------------------
 
 
@@ -135,17 +163,122 @@ class ChatRequest(BaseModel):
     image_context: dict[str, Any] | None = Field(default=None)
 
 
-async def run_chat_job(payload: dict[str, Any]) -> dict[str, Any]:
+class NoActivePresetError(RuntimeError):
+    """Raised by ``run_chat_job`` when no model preset is configured.
+
+    Surfaced to the client as the job's ``error`` field (``JobManager``
+    catches handler exceptions and stores ``str(exc)``), satisfying the
+    "if no preset configured, return a helpful error" requirement without a
+    special-cased response shape.
+    """
+
+
+class ChatHistoryStore:
+    """Server-side chat history, keyed by ``history_id`` (plan §5.3).
+
+    One history per image (Lua is expected to key ``history_id`` off the
+    image, e.g. its path or db id); trimmed to a character budget on every
+    append so a long-running chat never grows the prompt unboundedly.
+    """
+
+    def __init__(self, char_budget: int = DEFAULT_HISTORY_CHAR_BUDGET) -> None:
+        self._char_budget = char_budget
+        self._histories: dict[str, list[dict[str, str]]] = {}
+
+    def get(self, history_id: str) -> list[dict[str, str]]:
+        """A copy of the stored turns for ``history_id`` (oldest first)."""
+        return list(self._histories.get(history_id, []))
+
+    def append_turn(self, history_id: str, user_message: str, answer: str) -> None:
+        turns = self._histories.setdefault(history_id, [])
+        turns.append({"role": "user", "content": user_message})
+        turns.append({"role": "assistant", "content": answer})
+        self._trim(turns)
+
+    def _trim(self, turns: list[dict[str, str]]) -> None:
+        total = sum(len(t["content"]) for t in turns)
+        # Always keep at least the most recent exchange, even if it alone
+        # exceeds the budget -- dropping the question just asked would be
+        # worse than a slightly oversized prompt.
+        while total > self._char_budget and len(turns) > 2:
+            removed = turns.pop(0)
+            total -= len(removed["content"])
+
+    def clear(self, history_id: str) -> None:
+        self._histories.pop(history_id, None)
+
+
+def _build_llm_client(preset: ModelPreset) -> OpenAIChatClient:
+    return OpenAIChatClient(
+        base_url=preset.base_url,
+        api_key=preset.api_key,
+        model=preset.model,
+        supports_vision=preset.supports_vision,
+    )
+
+
+async def run_chat_job(payload: dict[str, Any], app: Any) -> dict[str, Any]:
     """Job handler for kind ``"chat"``.
 
-    Placeholder pipeline: echoes the user's message back. Worker W5 replaces
-    this body with real LLM + RAG + prompt assembly; the payload shape
-    (``message``, ``history_id``, ``image_context``) and return shape
-    (``{"answer": str, "style": {...} | None}``) are the contract other
-    pieces (Lua transcript rendering) are built against, per plan §5.2/§5.3.
+    Pipeline (plan §5.2/§5.3/§5.5): resolve the active preset (error out
+    with a helpful message if none is configured), enrich ``image_context``
+    via ``context.py`` into a ``CURRENT EDIT STATE`` block when present,
+    retrieve the top-``CHAT_RAG_TOP_K`` module-library excerpts for the
+    user's message, assemble messages with the trimmed per-``history_id``
+    history, call the LLM, then record the turn. Return shape
+    (``{"answer": str, "style": {...} | None}``) is the contract the Lua
+    transcript rendering is built against.
+
+    ``app`` is the owning ``FastAPI`` app (see ``main.create_app``'s
+    registration closure) -- job handlers otherwise only see ``payload``.
     """
+    config: ConfigStore = app.state.config_store
+    preset = config.active_preset()
+    if preset is None or not config.model_ready():
+        raise NoActivePresetError(
+            "No model preset is configured yet. Add one via the model "
+            "preset picker (or POST /config) before chatting."
+        )
+
     message = payload.get("message", "")
-    return {"answer": f"Echo: {message}", "style": None}
+    history_id = payload.get("history_id") or DEFAULT_HISTORY_ID
+    raw_image_context = payload.get("image_context")
+
+    edit_state_block: str | None = None
+    if raw_image_context:
+        enriched = context.build_image_context(
+            raw_image_context,
+            db_path=raw_image_context.get("db_path"),
+            image_id=raw_image_context.get("image_id"),
+        )
+        edit_state_block = context.render_edit_state_block(enriched)
+
+    retriever = rag.get_retriever()
+    retrieved_text = retriever.retrieve_text(message, k=CHAT_RAG_TOP_K)
+    module_library_block = f"MODULE LIBRARY\n\n{retrieved_text}" if retrieved_text else None
+
+    history_store: ChatHistoryStore = app.state.chat_histories
+    history = history_store.get(history_id)
+
+    messages = prompts.build_chat_messages(
+        user_message=message,
+        history=history,
+        edit_state_block=edit_state_block,
+        module_library_block=module_library_block,
+    )
+
+    client = _build_llm_client(preset)
+    try:
+        answer = await client.chat(
+            messages, temperature=CHAT_TEMPERATURE, max_tokens=CHAT_MAX_TOKENS
+        )
+    except LLMError as exc:
+        raise RuntimeError(f"LLM request failed: {exc}") from exc
+    finally:
+        await client.aclose()
+
+    history_store.append_turn(history_id, message, answer)
+    return {"answer": answer, "style": None}
 
 
 @router.post("/chat")
@@ -162,6 +295,17 @@ async def get_job(job_id: str, request: Request) -> dict[str, Any]:
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return job.to_public_dict()
+
+
+class HistoryClearRequest(BaseModel):
+    history_id: str
+
+
+@router.post("/history/clear")
+async def clear_history(body: HistoryClearRequest, request: Request) -> dict[str, Any]:
+    history_store: ChatHistoryStore = request.app.state.chat_histories
+    history_store.clear(body.history_id)
+    return {"status": "ok"}
 
 
 # ---------------------------------------------------------------------------
