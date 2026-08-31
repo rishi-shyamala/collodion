@@ -13,3 +13,5 @@ Rules:
 
 - `001-orchestration-log.md` — task breakdown, subagent assignments, PR/review log
 - `002-conventions-for-subagents.md` — how work is scoped, branch/PR rules, file-ownership map
+- `005-xmp-params-encoding.md` — verified `darktable:params` gz/hex encoding, source references, outstanding real-XMP validation task
+- `006-codec-notes.md` — per-module struct layout notes for the Tier-1 params codecs
