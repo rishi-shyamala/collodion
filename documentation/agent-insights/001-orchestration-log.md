@@ -33,3 +33,12 @@ Wave 3: W8.
 ## PR / review log
 
 (appended as PRs land)
+
+### 2026-08-31 — PR #1 (W1, feat/helper-skeleton) MERGED
+Verified independently: 10 tests pass, ruff clean. Notes: jobs.py docstring mentions nonexistent `pipelines` module (cleanup for W5); helper's default runtime file is `<platform-cache>/dt-ai-helper/runtime.json` — Lua launcher should pass `--runtime-file` explicitly to avoid path-guessing drift (reconcile with W2's 003-runtime-file-location.md when it lands).
+
+### 2026-08-31 — PR #2 (W2, feat/lua-frontend) MERGED
+lua/dt-ai-assistant.lua (~1360 lines): luac-clean, mock-driven callback tests, runtime-file contract cross-checked with W1. Manual-test items outstanding: styles.import() return value on live darktable, Windows detached launch. Follow-up: pass --runtime-file explicitly at launch. Note: insight-file numbers 004 now taken (xmp-freshness-check-split); W3/W4 insight files may need renumbering at merge.
+
+### 2026-08-31 — PR #3 (W4, feat/xmp-codecs) MERGED
+XMP parser + Tier 1 codecs (10 ops, current modversions), dbfallback, synthetic fixtures. Verified: 55 tests pass, ruff clean; exposure codec spot-checked against dt 4.6 source (gboolean handled as int32). Orchestrator resolved agent-insights README index merge conflict. Outstanding manual task: validate against real darktable-produced XMPs (insights 005).
