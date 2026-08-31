@@ -42,6 +42,7 @@ def _ok_response(content: str) -> httpx.Response:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_request_shape():
     captured: list[httpx.Request] = []
 
@@ -82,6 +83,7 @@ async def test_request_shape():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_retries_on_429_then_succeeds():
     attempts = {"n": 0}
 
@@ -107,6 +109,7 @@ async def test_retries_on_429_then_succeeds():
     assert attempts["n"] == 2
 
 
+@pytest.mark.asyncio
 async def test_exhausts_retries_and_raises():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(503, text="down")
@@ -131,6 +134,7 @@ async def test_exhausts_retries_and_raises():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 async def test_chat_json_uses_response_format_when_supported():
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
@@ -151,6 +155,7 @@ async def test_chat_json_uses_response_format_when_supported():
     assert result == {"assessment": "ok", "recommendations": []}
 
 
+@pytest.mark.asyncio
 async def test_chat_json_falls_back_to_fenced_extraction():
     calls = {"n": 0}
 
