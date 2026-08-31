@@ -77,6 +77,32 @@ class HistoryEntry:
         return (self.operation, self.multi_priority)
 
 
+#: darktable's own compress-vs-plain-hex cutoff (`COMPRESS_THRESHOLD` in
+#: `src/common/exif.cc`), compared against the *uncompressed* byte length.
+#: Shared with `styles.py` (which encodes `op_params`/`blendop_params` for
+#: `.dtstyle` files via the exact same `dt_exif_xmp_encode` routine XMP
+#: sidecars use - see `src/common/styles.c::dt_style_encode`) and with
+#: `tests/fixtures/make_fixtures.py`.
+COMPRESS_THRESHOLD = 100
+
+
+def encode_params_blob(raw: bytes) -> str:
+    """Encode raw struct bytes the way darktable writes `darktable:params`/
+    `darktable:blendop_params` (and, via the same `dt_exif_xmp_encode`
+    routine, `.dtstyle` `op_params`/`blendop_params` - see
+    `src/common/styles.c::dt_style_encode`): plain lowercase hex at or
+    below `COMPRESS_THRESHOLD` raw bytes, `gz` + 2-digit expansion factor +
+    base64(zlib-compressed bytes) above it. This is the encode twin of
+    `decode_params_blob` - see agent-insights 005 for the verified
+    algorithm.
+    """
+    if len(raw) > COMPRESS_THRESHOLD:
+        compressed = zlib.compress(raw)
+        factor = min(len(raw) // max(len(compressed), 1) + 1, 99)
+        return f"gz{factor:02d}" + base64.b64encode(compressed).decode("ascii")
+    return raw.hex()
+
+
 def decode_params_blob(text: str | None) -> bytes | None:
     """Decode a `darktable:params`/`darktable:blendop_params` text value.
 

@@ -45,3 +45,6 @@ XMP parser + Tier 1 codecs (10 ops, current modversions), dbfallback, synthetic 
 
 ### 2026-08-31 — PR #4 (W3, feat/rag) MERGED
 89-module corpus (50 full/39 stub, ~24k words), BM25 + synonyms + deprecated-penalty retriever, validator. 119 tests green. Orchestrator renumbered corpus notes to 008 and fixed scripts/ lint. Packaging gap (corpus outside wheel — needs package-data or move into dt_ai_helper/data) assigned to W8.
+
+### 2026-08-31 — PR #5 (W7, feat/styles) MERGED
+.dtstyle emitter (shape + 420-byte blendop defaults verified against darktable source), recommendation translator, POST /style (inline recommendation — accepted deviation). 137 tests green. Integration note for W6: optimize job handler should call styles internally and return style.file in the job result (Lua's Apply-style expects it there). denoiseprofile/crop excluded from styles (no static defaults / no slider mapping).
