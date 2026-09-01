@@ -36,7 +36,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from dt_ai_helper.api import ChatHistoryStore, ConfigStore, router, run_chat_job
+from dt_ai_helper.api import (
+    ChatHistoryStore,
+    ConfigStore,
+    router,
+    run_chat_job,
+    run_optimize_job,
+    run_vision_job,
+)
 from dt_ai_helper.jobs import JobManager
 
 DEFAULT_HEARTBEAT_TIMEOUT = 600.0  # 10 minutes, per plan §3/§5.2
@@ -173,7 +180,15 @@ def create_app(
     async def _run_chat_job(payload: dict[str, Any]) -> dict[str, Any]:
         return await run_chat_job(payload, app)
 
+    async def _run_optimize_job(payload: dict[str, Any]) -> dict[str, Any]:
+        return await run_optimize_job(payload, app)
+
+    async def _run_vision_job(payload: dict[str, Any]) -> dict[str, Any]:
+        return await run_vision_job(payload, app)
+
     app.state.job_manager.register_handler("chat", _run_chat_job)
+    app.state.job_manager.register_handler("optimize", _run_optimize_job)
+    app.state.job_manager.register_handler("vision", _run_vision_job)
     app.state.heartbeat_timeout = heartbeat_timeout
     app.state.last_heartbeat = time.time()
     app.state.token = token
