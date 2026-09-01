@@ -18,11 +18,12 @@ from pathlib import Path
 import httpx
 import numpy as np
 import pytest
+from fastapi.testclient import TestClient
+from PIL import Image
+
 from dt_ai_helper import api as api_module
 from dt_ai_helper.llm import OpenAIChatClient
 from dt_ai_helper.main import create_app
-from fastapi.testclient import TestClient
-from PIL import Image
 
 TOKEN = "test-token-123"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}

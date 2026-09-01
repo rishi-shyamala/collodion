@@ -14,6 +14,8 @@ from pathlib import Path
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
+
 from dt_ai_helper import api as api_module
 from dt_ai_helper.llm import (
     LLMError,
@@ -25,7 +27,6 @@ from dt_ai_helper.llm import (
     is_local_host,
 )
 from dt_ai_helper.main import create_app
-from fastapi.testclient import TestClient
 
 FIXTURES = Path(__file__).parent / "fixtures"
 TOKEN = "test-token-123"

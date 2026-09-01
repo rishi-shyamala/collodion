@@ -12,8 +12,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from dt_ai_helper import histogram
 from PIL import Image
+
+from dt_ai_helper import histogram
 
 
 def _save(tmp_path: Path, name: str, arr: np.ndarray) -> Path:

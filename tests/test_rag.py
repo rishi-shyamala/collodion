@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from dt_ai_helper.rag import (
     DEFAULT_TOP_K,
     SYNONYMS,
@@ -27,7 +28,7 @@ from dt_ai_helper.rag import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CORPUS_DIR = REPO_ROOT / "helper" / "data" / "module_library"
+CORPUS_DIR = REPO_ROOT / "helper" / "dt_ai_helper" / "data" / "module_library"
 
 
 def _load_build_library():

@@ -34,7 +34,7 @@ _HELPER_SRC = Path(__file__).resolve().parents[2] / "helper"
 if str(_HELPER_SRC) not in sys.path:
     sys.path.insert(0, str(_HELPER_SRC))
 
-from dt_ai_helper.params_codec import encode_params
+from dt_ai_helper.params_codec import encode_params  # noqa: E402 -- needs the sys.path fix-up above
 
 # Matches src/common/exif.cc COMPRESS_THRESHOLD + the "only large entries"
 # compress_xmp_tags preference, which is darktable's default.

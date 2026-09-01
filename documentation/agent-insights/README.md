@@ -19,3 +19,4 @@ Rules:
 - `006-codec-notes.md` — per-module struct layout notes for the Tier-1 params codecs
 - `008-rag-corpus-notes.md` — RAG corpus sourcing, synonym strategy, op-name traps, coverage stats
 - `010-optimize-vision-notes.md` — histogram rule-tag vocabulary, optimize retrieval query mapping, /optimize style-from-job reuse, /vision privacy-gate ordering, and contract deviations
+- `011-api-contract.md` — authoritative as-implemented Lua↔helper HTTP contract (every route, request/response shapes, error semantics, deviations from plan §5.2)
