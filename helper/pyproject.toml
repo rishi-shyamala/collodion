@@ -32,6 +32,15 @@ dt-ai-helper = "dt_ai_helper.main:cli"
 [tool.setuptools.packages.find]
 include = ["dt_ai_helper*"]
 
+# Ship the RAG corpus (helper/dt_ai_helper/data/module_library/*.md) inside
+# the wheel -- setuptools does not include non-.py files by default, and the
+# corpus used to live outside the package entirely (helper/data/), which
+# meant a non-editable install worked but the resulting wheel shipped
+# without it (documentation/agent-insights/011-api-contract.md). include_package_data
+# plus this package_data entry covers both sdist and wheel builds.
+[tool.setuptools.package-data]
+dt_ai_helper = ["data/module_library/*.md"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"

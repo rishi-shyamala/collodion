@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate the RAG module library (plan section 8).
 
-Checks, for every ``helper/data/module_library/<op>.md``:
+Checks, for every ``helper/dt_ai_helper/data/module_library/<op>.md``:
 
 * the first line is ``# <display name> (<op>)``
 * the header's op name matches the filename
@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
         "corpus_dir",
         nargs="?",
         default=None,
-        help="module library directory (default: helper/data/module_library)",
+        help="module library directory (default: helper/dt_ai_helper/data/module_library)",
     )
     parser.add_argument("--quiet", action="store_true", help="only print the summary")
     args = parser.parse_args(argv)
@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
     corpus_dir = (
         Path(args.corpus_dir)
         if args.corpus_dir
-        else REPO_ROOT / "helper" / "data" / "module_library"
+        else REPO_ROOT / "helper" / "dt_ai_helper" / "data" / "module_library"
     )
 
     # Parse each file individually so a malformed header is reported with its

@@ -565,8 +565,16 @@ end
 -- dt.control.execute on Windows) and extends the same approach to
 -- Linux/macOS for symmetry and to get proper backgrounding via nohup+disown.
 local function launch_helper()
-  local cmd = helper_launch_command()
   local log_file = default_runtime_dir() .. "/helper.log"
+  -- Pass --runtime-file explicitly rather than relying on the Python side's
+  -- own default_runtime_file() resolving to the same path we poll below --
+  -- both sides currently compute the same default independently (see
+  -- agent-insights 003), which is a drift hazard if only one side's default
+  -- ever changes. Appended to the launch command unconditionally, including
+  -- when helper_command_override is set: dt_ai_helper.main's CLI accepts
+  -- --runtime-file however it's invoked, and an override that truly can't
+  -- take extra arguments is already an advanced/unsupported configuration.
+  local cmd = helper_launch_command() .. " --runtime-file " .. shq(runtime_file_path())
 
   if is_windows then
     local bat = tmp_file("launch.bat")
@@ -1102,6 +1110,12 @@ local function do_analyze()
   local payload = json.object({
     message = message,
     preview_path = preview_path,
+    -- The helper's privacy gate (plan §5.4/§11) is evaluated per-request
+    -- against whichever preset is active, and has no other channel to see
+    -- this user-level consent toggle (see agent-insights 010/011) -- send
+    -- the pref's current value on every /vision call, not just the local
+    -- refusal check above.
+    allow_upload = pref_read("allow_cloud_upload", "bool"),
   })
   if include_state then
     payload.image_context = build_image_context(image, true)

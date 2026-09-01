@@ -6,8 +6,9 @@ are retained for polling via ``GET /jobs/{id}``.
 
 Job "kinds" are registered by name -> async callable so later workers (chat,
 optimize, vision) can plug in their own pipelines without touching this
-module. See ``dt_ai_helper.pipelines`` for the registry and the echo stub
-used until the real LLM pipeline (W5) lands.
+module. Handlers are registered via ``register_handler`` from
+``dt_ai_helper.main.create_app`` (see the ``"chat"``/``"optimize"``/
+``"vision"`` closures there); there is no separate ``pipelines`` module.
 """
 
 from __future__ import annotations

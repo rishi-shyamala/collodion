@@ -1,6 +1,6 @@
 """RAG over the darktable module library (plan section 8).
 
-The corpus lives in ``helper/data/module_library`` as one markdown file per
+The corpus lives in ``helper/dt_ai_helper/data/module_library`` as one markdown file per
 darktable processing module, named after the module's internal op name
 (``filmicrgb.md``, ``colorbalancergb.md``, ...). Chunk granularity is the whole
 file: the entries are small and are meant to be injected verbatim.
@@ -274,11 +274,17 @@ class RetrievalResult:
 
 
 def default_corpus_dir() -> Path:
-    """Location of the module library, overridable via the environment."""
+    """Location of the module library, overridable via the environment.
+
+    The corpus is bundled *inside* the ``dt_ai_helper`` package (see
+    ``pyproject.toml``'s ``package-data`` entry) so it ships with a
+    non-editable wheel install, not just an editable one -- see
+    ``documentation/agent-insights/011-api-contract.md``.
+    """
     override = os.environ.get(CORPUS_ENV_VAR)
     if override:
         return Path(override)
-    return Path(__file__).resolve().parent.parent / "data" / "module_library"
+    return Path(__file__).resolve().parent / "data" / "module_library"
 
 
 #: Section names the parser recognises as frontmatter-style header lines.
