@@ -54,3 +54,10 @@ Real chat pipeline: OpenAIChatClient (retries, strict_json, vision privacy guard
 
 ### 2026-09-01 — PR #7 (W6, feat/optimize-vision) MERGED
 histogram.py stats + 15 rule tags, /optimize (strict JSON, server-side style build, style.file in job result), /vision (two-pass, privacy gate via llm.guard_vision_upload, supports_vision check). 171 tests green. Session restart mid-task; agent resumed successfully. Deviation accepted: /vision body gains allow_upload (insights 010). BUG FOUND for W8: Lua does not send allow_upload in /vision payload → cloud vision refused even with consent.
+
+### 2026-09-01 — PR #8 (W8, feat/packaging) MERGED — all planned work complete
+Lua allow_upload + explicit --runtime-file fixes; corpus moved into package (wheel verified); install.sh (tested) / install.ps1 (untested, no Windows); 011-api-contract.md; tests/MANUAL.md; README; CI file updated at ci/github-ci.yml. 171 tests green.
+
+## Project status after Wave 3
+
+All plan phases 0–6 implemented and merged (PRs #1–#8). Everything is verified offline (171 tests, mocks, synthetic fixtures). Remaining work is exclusively manual validation on a real darktable install — see tests/MANUAL.md — plus: `gh auth refresh -s workflow` then move ci/github-ci.yml to .github/workflows/ci.yml; test install.ps1 on Windows; capture real dt-produced XMPs as fixtures (insights 005).
