@@ -18,3 +18,4 @@ Rules:
 - `005-xmp-params-encoding.md` — verified `darktable:params` gz/hex encoding, source references, outstanding real-XMP validation task
 - `006-codec-notes.md` — per-module struct layout notes for the Tier-1 params codecs
 - `008-rag-corpus-notes.md` — RAG corpus sourcing, synonym strategy, op-name traps, coverage stats
+- `010-optimize-vision-notes.md` — histogram rule-tag vocabulary, optimize retrieval query mapping, /optimize style-from-job reuse, /vision privacy-gate ordering, and contract deviations
