@@ -9,9 +9,8 @@ from __future__ import annotations
 import time
 
 import pytest
-from fastapi.testclient import TestClient
-
 from dt_ai_helper.main import create_app
+from fastapi.testclient import TestClient
 
 TOKEN = "test-token-123"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}

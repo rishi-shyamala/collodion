@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
 from dt_ai_helper.params_codec import decode_params, encode_params, get_codec, known_ops
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"

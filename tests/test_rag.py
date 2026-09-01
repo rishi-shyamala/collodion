@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from dt_ai_helper.rag import (
     DEFAULT_TOP_K,
     SYNONYMS,
