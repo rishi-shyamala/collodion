@@ -51,3 +51,6 @@ XMP parser + Tier 1 codecs (10 ops, current modversions), dbfallback, synthetic 
 
 ### 2026-08-31 — PR #6 (W5b, feat/llm-chat) MERGED
 Real chat pipeline: OpenAIChatClient (retries, strict_json, vision privacy guard), prompts, context.py enrichment, per-history_id server-side history. Salvaged interrupted W5's WIP; W5b merged main, resolved api.py /style conflict, fixed pytest-asyncio rootdir gotcha (insights 009). 153 tests green.
+
+### 2026-09-01 — PR #7 (W6, feat/optimize-vision) MERGED
+histogram.py stats + 15 rule tags, /optimize (strict JSON, server-side style build, style.file in job result), /vision (two-pass, privacy gate via llm.guard_vision_upload, supports_vision check). 171 tests green. Session restart mid-task; agent resumed successfully. Deviation accepted: /vision body gains allow_upload (insights 010). BUG FOUND for W8: Lua does not send allow_upload in /vision payload → cloud vision refused even with consent.
